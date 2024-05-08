@@ -63,9 +63,7 @@ resource "aws_iam_role" "test_role" {
     Version = "2012-10-17"
     Statement = [
       {
-        Action = ["s3:GetOject",
-          "s3:PutObject"
-        ]
+        Action = "sts:AssumeRole"
         Effect = "Allow"
         Sid    = ""
         Principal = {
@@ -138,114 +136,57 @@ resource "aws_route_table_association" "public_subnet_association2" {
 
 resource "aws_security_group" "ec2_sg" {
   vpc_id = aws_vpc.customVPC.id
+
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
 resource "aws_security_group" "alb_sg" {
   vpc_id = aws_vpc.customVPC.id
+
   ingress {
-    from_port   = 80
-    to_port     = 80
+    from_port   = 22
+    to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-} 
 
-resource "aws_security_group" "rds_sg" {
-  vpc_id = aws_vpc.customVPC.id
-  ingress {
-    from_port   = 3306
-    to_port     = 3306
-    protocol    = "tcp"
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
+resource "aws_security_group" "rds_sg" {
+  vpc_id = aws_vpc.customVPC.id
 
-# resource "aws_security_group" "allow_tls" {
-#   name        = "allow_tls"
-#   description = "Allow TLS inbound traffic and all outbound traffic"
-#     vpc_id      = aws_vpc.customVPC.id
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
-#   tags = {
-#     Name = "allow_tls"
-#   }
-# }
-
-# resource "aws_vpc_security_group_ingress_rule" "allow_tls_ipv4" {
-#   security_group_id = aws_security_group.allow_tls.id
-#   cidr_ipv4         = "0.0.0.0/0"
-#   from_port         = 80
-#   ip_protocol       = "tcp"
-#   to_port           = 80
-# }
-
-# resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
-#   security_group_id = aws_security_group.allow_tls.id
-#   cidr_ipv4         = "0.0.0.0/0"
-#   ip_protocol       = "-1" # semantically equivalent to all ports
-# }
-# resource "aws_security_group" "allow_tls" {
-#   name        = "allow_tls"
-#   description = "Allow TLS inbound traffic and all outbound traffic"
-#   vpc_id      = aws_vpc.customVPC.id
-
-#   tags = {
-#     Name = "allow_tls"
-#   }
-# }
-
-# resource "aws_vpc_security_group_ingress_rule" "allow_tls_ipv4" {
-#   security_group_id = aws_security_group.allow_tls.id
-#   cidr_ipv4         = "0.0.0.0/0"
-#   from_port         = 80
-#   ip_protocol       = "tcp"
-#   to_port           = 80
-# }
-
-# resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
-#   security_group_id = aws_security_group.allow_tls.id
-#   cidr_ipv4         = "0.0.0.0/0"
-#   ip_protocol       = "-1" # semantically equivalent to all ports
-# }
-
-
-
-# resource "aws_security_group" "allow_tls" {
-#   name        = "allow_tls"
-#   description = "Allow TLS inbound traffic and all outbound traffic"
-#   vpc_id      = aws_vpc.customVPC.id
-
-#   tags = {
-#     Name = "allow_tls"
-#   }
-# }
-
-# resource "aws_vpc_security_group_ingress_rule" "allow_tls_ipv4" {
-#   security_group_id = aws_security_group.allow_tls.id
-#   cidr_ipv4         = "0.0.0.0/0"
-#   from_port         = 80
-#   ip_protocol       = "tcp"
-#   to_port           = 80
-# }
-
-# resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
-#   security_group_id = aws_security_group.allow_tls.id
-#   cidr_ipv4         = "0.0.0.0/0"
-#   ip_protocol       = "-1" # semantically equivalent to all ports
-# }
-
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
 
 
 resource "aws_lb_target_group" "alb-example" {
@@ -264,9 +205,9 @@ resource "aws_lb" "web-alb" {
   security_groups    = [aws_security_group.alb_sg.id]
   subnets            = [aws_subnet.custom_public_sunet1.id, aws_subnet.custom_public_sunet2.id]
 }
-  # tags = {
-  #   Environment = "lab"
-  # }
+# tags = {
+#   Environment = "lab"
+# }
 
 resource "aws_launch_template" "example_launch_template" {
   name_prefix   = "example-launch-template"
